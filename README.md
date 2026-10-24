@@ -4,7 +4,7 @@
 
 **PHP Runtime Vulnerability Assessment Toolkit**
 
-[![CI](https://github.com/your-org/php2shell-sentinel/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/php2shell-sentinel/actions)
+[![CI](https://github.com/hoed/php2shell/actions/workflows/ci.yml/badge.svg)](https://github.com/hoed/php2shell/actions)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CVE-2026-109618](https://img.shields.io/badge/CVE-2026--109618-critical-red)](https://github.com/advisories/GHSA-w8hw-w9fx-j79w)
