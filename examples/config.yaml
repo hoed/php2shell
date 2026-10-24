@@ -1,0 +1,18 @@
+# PHP2Shell Sentinel — Sample configuration
+# Copy this file and adjust for your authorised assessment scope.
+
+# Authorised targets for remote assessment
+# Only hosts explicitly listed here will be assessed.
+allowlist:
+  - authorized-server.example.com
+  - staging.example.com
+  - 192.168.1.100        # private IPs are fine for internal assessments
+
+# Assessment settings
+timeout_seconds: 10
+rate_limit_delay_seconds: 1
+verify_tls: true
+
+# Report output
+default_format: terminal   # terminal | json | markdown | all
+report_directory: ./reports

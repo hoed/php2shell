@@ -1,0 +1,71 @@
+# PHP2Shell Sentinel — Isolated Lab Environment
+#
+# IMPORTANT:
+#   - All ports are bound to 127.0.0.1 only (never 0.0.0.0)
+#   - Only run this on an isolated development machine
+#   - Do NOT expose lab containers to public networks
+#   - Vulnerable containers are for VERSION COMPARISON ONLY
+#
+# Usage:
+#   cd lab
+#   docker compose up -d
+#   php2shell-sentinel lab-check
+#   docker compose down
+
+networks:
+  lab_internal:
+    internal: true     # No external internet access from containers
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+services:
+  # ── Patched version (reference) ──────────────────────────────────────────
+  php-patched:
+    image: php:8.4.27-apache
+    container_name: php2shell-patched
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8880:80"    # localhost only
+    networks:
+      - lab_internal
+    volumes:
+      - ./www/patched:/var/www/html:ro
+      - ./php-safe.ini:/usr/local/etc/php/php.ini:ro
+    environment:
+      PHP_INI_SCAN_DIR: /usr/local/etc/php
+    labels:
+      php2shell.lab.role: "patched-reference"
+      php2shell.lab.cve: "CVE-2026-109618,CVE-2026-109619"
+
+  # ── Vulnerable version (isolated, lab comparison only) ───────────────────
+  # This container runs a vulnerable PHP version solely to verify detection
+  # tooling. No exploit payloads are executed against it.
+  php-vulnerable:
+    image: php:8.4.26-apache
+    container_name: php2shell-vulnerable
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8881:80"    # localhost only
+    networks:
+      - lab_internal
+    volumes:
+      - ./www/vulnerable:/var/www/html:ro
+      - ./php-default.ini:/usr/local/etc/php/php.ini:ro
+    labels:
+      php2shell.lab.role: "vulnerable-comparison"
+      php2shell.lab.cve: "CVE-2026-109618,CVE-2026-109619"
+
+  # ── PHP-FPM + nginx variant ───────────────────────────────────────────────
+  php-fpm-patched:
+    image: php:8.4.27-fpm
+    container_name: php2shell-fpm-patched
+    restart: unless-stopped
+    networks:
+      - lab_internal
+    volumes:
+      - ./www/patched:/var/www/html:ro
+      - ./php-safe.ini:/usr/local/etc/php/php.ini:ro
+    labels:
+      php2shell.lab.role: "fpm-patched"

@@ -1,0 +1,59 @@
+{
+  "toolkit_version": "1.0.0",
+  "generated_at": "2026-10-23T09:15:00Z",
+  "scope": "local-audit",
+  "cve_references": {
+    "CVE-2026-109618": "https://github.com/advisories/GHSA-w8hw-w9fx-j79w",
+    "CVE-2026-109619": "https://github.com/advisories/GHSA-6wmf-4rv5-p3rp"
+  },
+  "findings": [
+    {
+      "target": "/usr/bin/php8.4",
+      "timestamp": "2026-10-23T09:15:02Z",
+      "php_version": "8.4.26",
+      "php_version_source": "cli",
+      "vuln_status": "VULNERABLE",
+      "remote_status": null,
+      "confidence": "HIGH",
+      "cves": ["CVE-2026-109618", "CVE-2026-109619"],
+      "checks_performed": [
+        "binary-discovery",
+        "php-binary-version",
+        "php-ini:/etc/php/8.4/cli/php.ini",
+        "php-fpm-pools"
+      ],
+      "evidence": [
+        "PHP 8.4.26 < patched release 8.4.27 on branch 8.4."
+      ],
+      "notes": [
+        "[php.ini] memory_limit=128M → A numeric memory_limit triggers the OOM path exploited by CVE-2026-109618.",
+        "[php.ini] session.upload_progress.enabled=1 → known attack vector for CVE-2026-109618."
+      ],
+      "recommendations": [
+        "Upgrade to PHP 8.4.27 immediately (released 2026-10-21).",
+        "Set memory_limit=-1 in /etc/php/8.4/cli/php.ini.",
+        "Set session.upload_progress.enabled=0 in /etc/php/8.4/cli/php.ini.",
+        "Set fatal_error_backtraces=0 in /etc/php/8.4/cli/php.ini."
+      ]
+    },
+    {
+      "target": "/usr/bin/php8.3",
+      "timestamp": "2026-10-23T09:15:04Z",
+      "php_version": "8.3.36",
+      "php_version_source": "cli",
+      "vuln_status": "PATCHED",
+      "remote_status": null,
+      "confidence": "HIGH",
+      "cves": ["CVE-2026-109618", "CVE-2026-109619"],
+      "checks_performed": [
+        "php-binary-version",
+        "php-ini:/etc/php/8.3/cli/php.ini"
+      ],
+      "evidence": [
+        "PHP 8.3.36 >= patched release 8.3.36 on branch 8.3."
+      ],
+      "notes": [],
+      "recommendations": []
+    }
+  ]
+}

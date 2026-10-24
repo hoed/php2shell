@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Reports output
+reports/
+*.report.json
+*.report.md
+
+# Secrets / env
+.env
+.env.*
+secrets.yaml
+
+# Docker volumes
+lab/data/
