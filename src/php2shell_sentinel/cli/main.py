@@ -11,11 +11,9 @@ Commands
 
 from __future__ import annotations
 
-import logging
-import sys
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, List, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -23,8 +21,8 @@ from rich.console import Console
 from .._version_check import check_python_version
 from ..core.lab_check import check_lab
 from ..core.local_audit import run_local_audit
-from ..core.models import AssessmentReport, PATCHED_VERSIONS, EOL_BRANCHES, CVE_IDS, CVSS_SCORE
-from ..core.remote_assess import assess_remote_batch, MAX_TARGETS
+from ..core.models import CVE_IDS, CVSS_SCORE, EOL_BRANCHES, PATCHED_VERSIONS, AssessmentReport
+from ..core.remote_assess import MAX_TARGETS, assess_remote_batch
 from ..reporting.renderer import (
     print_report_terminal,
     render_json,
@@ -62,7 +60,7 @@ _format_option = Annotated[
 ]
 
 _output_option = Annotated[
-    Optional[str],
+    str | None,
     typer.Option("--output", "-o", help="Write report to this file path (omit for stdout)."),
 ]
 
@@ -78,10 +76,10 @@ def version_check() -> None:
     console.print("\n[bold cyan]PHP2Shell Sentinel — Patch Matrix[/]\n")
     console.print(f"[dim]CVEs tracked:[/] {', '.join(CVE_IDS)}")
     console.print(f"[dim]CVSS v4.0 score:[/] {CVSS_SCORE}")
-    console.print(f"[dim]Patch date:[/] 2026-10-21\n")
+    console.print("[dim]Patch date:[/] 2026-10-21\n")
 
-    from rich.table import Table
     from rich import box as rbox
+    from rich.table import Table
 
     table = Table(box=rbox.ROUNDED, show_lines=True)
     table.add_column("PHP Branch", style="bold")
@@ -128,23 +126,23 @@ def audit_local(
 @app.command("assess")
 def assess(
     target: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--target", "-t", help="Single authorised target URL."),
     ] = None,
     target_file: Annotated[
-        Optional[Path],
+        Path | None,
         typer.Option("--target-file", help="File with one target URL per line."),
     ] = None,
     allowlist: Annotated[
-        Optional[List[str]],
+        list[str] | None,
         typer.Option(
             "--allowlist",
             help="Explicitly authorised host(s). Repeat for multiple. "
-                 "Targets NOT in this list are skipped.",
+            "Targets NOT in this list are skipped.",
         ),
     ] = None,
     allowlist_file: Annotated[
-        Optional[Path],
+        Path | None,
         typer.Option("--allowlist-file", help="File with one authorised host per line."),
     ] = None,
     timeout: Annotated[
@@ -187,8 +185,7 @@ def assess(
 
     if len(targets) > MAX_TARGETS:
         err_console.print(
-            f"[red]Too many targets ({len(targets)}). "
-            f"Maximum per session: {MAX_TARGETS}.[/]"
+            f"[red]Too many targets ({len(targets)}). Maximum per session: {MAX_TARGETS}.[/]"
         )
         raise typer.Exit(1)
 
@@ -240,7 +237,6 @@ def report_cmd(
 ) -> None:
     """Re-render a previously saved JSON report in another format."""
     import json
-    import dataclasses
 
     if not input_file.exists():
         err_console.print(f"[red]File not found: {input_file}[/]")
@@ -250,10 +246,13 @@ def report_cmd(
         raw = json.loads(input_file.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         err_console.print(f"[red]Invalid JSON: {exc}[/]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from exc
 
     from ..core.models import (
-        VulnerabilityFinding, VulnStatus, RemoteStatus, Confidence, PHPVersionInfo
+        Confidence,
+        RemoteStatus,
+        VulnerabilityFinding,
+        VulnStatus,
     )
 
     findings: list[VulnerabilityFinding] = []
@@ -261,6 +260,7 @@ def report_cmd(
         php_v = None
         if fd.get("php_version"):
             from ..core.version_parser import parse_php_version
+
             php_v = parse_php_version(fd["php_version"], source=fd.get("php_version_source", ""))
         findings.append(
             VulnerabilityFinding(
@@ -296,7 +296,7 @@ def report_cmd(
 @app.command("lab-check")
 def lab_check(
     compose_file: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--compose-file", help="Path to docker-compose.yml."),
     ] = "lab/docker-compose.yml",
 ) -> None:
@@ -347,7 +347,6 @@ def lab_check(
         raise typer.Exit(2)
 
 
-
 # ---------------------------------------------------------------------------
 # fingerprint (standalone deep probe)
 # ---------------------------------------------------------------------------
@@ -357,7 +356,7 @@ def lab_check(
 def fingerprint_cmd(
     target: Annotated[str, typer.Argument(help="Target URL to fingerprint.")],
     allowlist: Annotated[
-        Optional[List[str]],
+        list[str] | None,
         typer.Option("--allowlist", help="Authorised host(s). Defaults to target host."),
     ] = None,
     no_verify_tls: Annotated[
@@ -373,12 +372,13 @@ def fingerprint_cmd(
     \b
     Only run against systems you are authorised to assess.
     """
-    from ..core.remote_assess import validate_scope
     from ..core.fingerprint import fingerprint
+    from ..core.remote_assess import validate_scope
 
     allowed = list(allowlist) if allowlist else []
     if not allowed:
         from urllib.parse import urlparse
+
         host = urlparse(target).hostname or target
         allowed = [host]
         console.print(
@@ -388,8 +388,7 @@ def fingerprint_cmd(
 
     if not validate_scope(target, allowed):
         err_console.print(
-            f"[red]Target {target!r} is not in the allowlist. "
-            "Add it with --allowlist.[/]"
+            f"[red]Target {target!r} is not in the allowlist. Add it with --allowlist.[/]"
         )
         raise typer.Exit(1)
 
@@ -399,16 +398,10 @@ def fingerprint_cmd(
 
     status_colour = "green" if result.php_detected else "dim"
     console.print(f"[bold]Target:[/] {result.target}")
-    console.print(
-        f"[bold]PHP detected:[/] [{status_colour}]{result.php_detected}[/]"
-    )
-    console.print(
-        f"[bold]Version hint:[/] {result.version_hint or 'not determined'}"
-    )
+    console.print(f"[bold]PHP detected:[/] [{status_colour}]{result.php_detected}[/]")
+    console.print(f"[bold]Version hint:[/] {result.version_hint or 'not determined'}")
     console.print(f"[bold]Confidence:[/] {result.confidence.value}")
-    console.print(
-        f"[bold]Techniques used:[/] {', '.join(result.techniques_used) or 'none'}"
-    )
+    console.print(f"[bold]Techniques used:[/] {', '.join(result.techniques_used) or 'none'}")
 
     if result.evidence:
         console.print("\n[bold]Evidence:[/]")
@@ -422,9 +415,12 @@ def fingerprint_cmd(
 
     console.print()
     if result.php_detected:
-        console.print("[yellow]PHP presence confirmed — run full assess for vulnerability status.[/]")
+        console.print(
+            "[yellow]PHP presence confirmed — run full assess for vulnerability status.[/]"
+        )
     else:
         console.print("[dim]No conclusive PHP evidence found.[/]")
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -434,22 +430,26 @@ def fingerprint_cmd(
 def _output_report(
     report: AssessmentReport,
     format: OutputFormat,
-    output: Optional[str],
+    output: str | None,
 ) -> None:
     if format in (OutputFormat.terminal, OutputFormat.all):
         print_report_terminal(report)
 
     if format in (OutputFormat.json, OutputFormat.all):
-        path = output if format == OutputFormat.json else (
-            output.replace(".md", ".json") if output else None
+        path = (
+            output
+            if format == OutputFormat.json
+            else (output.replace(".md", ".json") if output else None)
         )
         json_text = render_json(report, output_path=path)
         if format == OutputFormat.json and not output:
             print(json_text)
 
     if format in (OutputFormat.markdown, OutputFormat.all):
-        path = output if format == OutputFormat.markdown else (
-            output.replace(".json", ".md") if output else None
+        path = (
+            output
+            if format == OutputFormat.markdown
+            else (output.replace(".json", ".md") if output else None)
         )
         md_text = render_markdown(report, output_path=path)
         if format == OutputFormat.markdown and not output:

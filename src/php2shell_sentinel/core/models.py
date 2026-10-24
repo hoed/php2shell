@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import datetime
-import datetime as _dt
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 
 class VulnStatus(str, Enum):
@@ -85,11 +83,15 @@ class VulnerabilityFinding:
 
     target: str
     timestamp: str = field(
-        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds").replace("+00:00","Z")
+        default_factory=lambda: (
+            datetime.datetime.now(datetime.timezone.utc)
+            .isoformat(timespec="seconds")
+            .replace("+00:00", "Z")
+        )
     )
-    php_version: Optional[PHPVersionInfo] = None
+    php_version: PHPVersionInfo | None = None
     vuln_status: VulnStatus = VulnStatus.UNKNOWN
-    remote_status: Optional[RemoteStatus] = None
+    remote_status: RemoteStatus | None = None
     confidence: Confidence = Confidence.LOW
     evidence: list[str] = field(default_factory=list)
     recommendations: list[str] = field(default_factory=list)
@@ -105,7 +107,11 @@ class AssessmentReport:
     scope: str
     findings: list[VulnerabilityFinding] = field(default_factory=list)
     generated_at: str = field(
-        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds").replace("+00:00","Z")
+        default_factory=lambda: (
+            datetime.datetime.now(datetime.timezone.utc)
+            .isoformat(timespec="seconds")
+            .replace("+00:00", "Z")
+        )
     )
     toolkit_version: str = "1.0.0"
     cve_references: dict[str, str] = field(default_factory=lambda: dict(ADVISORY_URLS))

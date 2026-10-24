@@ -13,13 +13,11 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 from .models import (
     AssessmentReport,
     VulnerabilityFinding,
     VulnStatus,
-    RemoteStatus,
 )
 from .version_parser import assess_version, parse_php_version
 
@@ -135,9 +133,9 @@ def _audit_binary(binary: str, verbose: bool = False) -> VulnerabilityFinding:
     return finding
 
 
-def _get_binary_version(binary: str) -> Optional[str]:
+def _get_binary_version(binary: str) -> str | None:
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603
             [binary, "--version"],
             capture_output=True,
             text=True,
@@ -154,7 +152,7 @@ def _get_binary_version(binary: str) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 
-_RISK_SETTINGS: dict[str, dict] = {
+_RISK_SETTINGS: dict[str, dict[str, object]] = {
     "session.upload_progress.enabled": {
         "risky_value": "1",
         "safe_value": "0",
@@ -234,9 +232,9 @@ def _check_php_ini(binary: str, finding: VulnerabilityFinding, verbose: bool = F
         finding.notes.append(f"php.ini reviewed: {ini_path}")
 
 
-def _get_ini_path(binary: str) -> Optional[str]:
+def _get_ini_path(binary: str) -> str | None:
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603
             [binary, "--ini"],
             capture_output=True,
             text=True,

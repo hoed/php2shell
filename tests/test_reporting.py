@@ -4,18 +4,16 @@ import json
 
 from php2shell_sentinel.core.models import (
     AssessmentReport,
-    VulnerabilityFinding,
-    VulnStatus,
     Confidence,
     PHPVersionInfo,
+    VulnerabilityFinding,
+    VulnStatus,
 )
 from php2shell_sentinel.reporting.renderer import render_json, render_markdown
 
 
 def _sample_report() -> AssessmentReport:
-    php_info = PHPVersionInfo(
-        raw="8.4.26", major=8, minor=4, patch=26, branch="8.4", source="cli"
-    )
+    php_info = PHPVersionInfo(raw="8.4.26", major=8, minor=4, patch=26, branch="8.4", source="cli")
     finding = VulnerabilityFinding(
         target="test-local",
         php_version=php_info,
@@ -52,6 +50,7 @@ class TestJsonRendering:
         out = str(tmp_path / "report.json")
         render_json(report, output_path=out)
         import pathlib
+
         content = pathlib.Path(out).read_text()
         assert "VULNERABLE" in content
 
@@ -83,4 +82,5 @@ class TestMarkdownRendering:
         out = str(tmp_path / "report.md")
         render_markdown(report, output_path=out)
         import pathlib
+
         assert "CVE" in pathlib.Path(out).read_text()

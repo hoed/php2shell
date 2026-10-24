@@ -10,7 +10,6 @@ import logging
 import shutil
 import subprocess
 from dataclasses import dataclass, field
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 class LabStatus:
     docker_available: bool = False
     compose_available: bool = False
-    containers: list[dict] = field(default_factory=list)
+    containers: list[dict[str, str]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     recommendations: list[str] = field(default_factory=list)
@@ -29,7 +28,7 @@ class LabStatus:
         return self.docker_available and not self.errors
 
 
-def check_lab(compose_file: Optional[str] = None) -> LabStatus:
+def check_lab(compose_file: str | None = None) -> LabStatus:
     """Inspect the Docker lab environment."""
     status = LabStatus()
 
@@ -37,8 +36,7 @@ def check_lab(compose_file: Optional[str] = None) -> LabStatus:
     status.docker_available = shutil.which("docker") is not None
     if not status.docker_available:
         status.errors.append(
-            "Docker not found. Install Docker Engine: "
-            "https://docs.docker.com/engine/install/"
+            "Docker not found. Install Docker Engine: https://docs.docker.com/engine/install/"
         )
         return status
 
@@ -54,6 +52,7 @@ def check_lab(compose_file: Optional[str] = None) -> LabStatus:
     # ── Compose file present ──────────────────────────────────────────────────
     if compose_file:
         import os
+
         if not os.path.isfile(compose_file):
             status.warnings.append(
                 f"docker-compose.yml not found at {compose_file}. "
@@ -63,8 +62,7 @@ def check_lab(compose_file: Optional[str] = None) -> LabStatus:
     # ── Recommendations ───────────────────────────────────────────────────────
     if not status.containers:
         status.recommendations.append(
-            "No lab containers running. "
-            "Start with: docker compose -f lab/docker-compose.yml up -d"
+            "No lab containers running. Start with: docker compose -f lab/docker-compose.yml up -d"
         )
     else:
         status.recommendations.append(
@@ -84,7 +82,9 @@ def _check_compose() -> bool:
     # Try both 'docker compose' (v2) and 'docker-compose' (v1)
     for cmd in [["docker", "compose", "version"], ["docker-compose", "--version"]]:
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+            result = subprocess.run(  # noqa: S603
+                cmd, capture_output=True, text=True, timeout=5
+            )
             if result.returncode == 0:
                 return True
         except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -92,13 +92,15 @@ def _check_compose() -> bool:
     return False
 
 
-def _list_lab_containers() -> list[dict]:
+def _list_lab_containers() -> list[dict[str, str]]:
     """Return Docker containers whose names contain 'php2shell'."""
     try:
-        result = subprocess.run(
-            [
-                "docker", "ps",
-                "--filter", "name=php2shell",
+        result = subprocess.run(  # noqa: S603, S607
+            [  # noqa: S607
+                "docker",
+                "ps",
+                "--filter",
+                "name=php2shell",
                 "--format",
                 "{{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}",
             ],
@@ -112,19 +114,21 @@ def _list_lab_containers() -> list[dict]:
         for line in result.stdout.strip().splitlines():
             parts = line.split("\t")
             if len(parts) == 4:
-                containers.append({
-                    "name": parts[0],
-                    "image": parts[1],
-                    "status": parts[2],
-                    "ports": parts[3],
-                })
+                containers.append(
+                    {
+                        "name": parts[0],
+                        "image": parts[1],
+                        "status": parts[2],
+                        "ports": parts[3],
+                    }
+                )
         return containers
     except Exception as exc:  # noqa: BLE001
         logger.debug("Could not list containers: %s", exc)
         return []
 
 
-def _check_container_isolation(c: dict, status: LabStatus) -> None:
+def _check_container_isolation(c: dict[str, str], status: LabStatus) -> None:
     """Warn if a lab container appears to be publicly bound."""
     ports = c.get("ports", "")
     name = c.get("name", "unknown")

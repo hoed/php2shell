@@ -23,18 +23,16 @@ from __future__ import annotations
 
 import os
 import socket
-import time
 
-import httpx
 import pytest
 
-from php2shell_sentinel.core.remote_assess import assess_remote
-from php2shell_sentinel.core.models import RemoteStatus, VulnStatus
-from php2shell_sentinel.core.version_parser import parse_php_version, assess_version
 from php2shell_sentinel.core.local_audit import run_local_audit
+from php2shell_sentinel.core.models import RemoteStatus, VulnStatus
+from php2shell_sentinel.core.remote_assess import assess_remote
+from php2shell_sentinel.core.version_parser import assess_version
 
 # Lab container addresses (must match lab/docker-compose.yml)
-LAB_PATCHED_URL   = "http://127.0.0.1:8880"
+LAB_PATCHED_URL = "http://127.0.0.1:8880"
 LAB_VULNERABLE_URL = "http://127.0.0.1:8881"
 
 FORCE_LAB = os.environ.get("PHP2SHELL_LAB", "").strip() == "1"
@@ -43,6 +41,7 @@ FORCE_LAB = os.environ.get("PHP2SHELL_LAB", "").strip() == "1"
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _port_open(host: str, port: int, timeout: float = 2.0) -> bool:
     """Return True if the TCP port accepts connections."""
@@ -55,6 +54,7 @@ def _port_open(host: str, port: int, timeout: float = 2.0) -> bool:
 
 def _lab_available(url: str) -> bool:
     import urllib.parse
+
     parsed = urllib.parse.urlparse(url)
     port = parsed.port or (443 if parsed.scheme == "https" else 80)
     return _port_open(parsed.hostname or "127.0.0.1", port)
@@ -66,14 +66,15 @@ def lab_required(url: str):
     return pytest.mark.skipif(
         not available,
         reason=f"Lab container not running at {url}. "
-               "Start with: cd lab && docker compose up -d  "
-               "Then re-run with PHP2SHELL_LAB=1",
+        "Start with: cd lab && docker compose up -d  "
+        "Then re-run with PHP2SHELL_LAB=1",
     )
 
 
 # ---------------------------------------------------------------------------
 # Patched container
 # ---------------------------------------------------------------------------
+
 
 @lab_required(LAB_PATCHED_URL)
 class TestPatchedContainer:
@@ -87,8 +88,7 @@ class TestPatchedContainer:
             verify_tls=False,
         )
         assert finding.remote_status == RemoteStatus.PATCHED_INDICATOR, (
-            f"Expected PATCHED_INDICATOR, got {finding.remote_status}. "
-            f"Notes: {finding.notes}"
+            f"Expected PATCHED_INDICATOR, got {finding.remote_status}. Notes: {finding.notes}"
         )
 
     def test_version_detected(self):
@@ -117,6 +117,7 @@ class TestPatchedContainer:
 
     def test_confidence_at_least_medium(self):
         from php2shell_sentinel.core.models import Confidence
+
         finding = assess_remote(
             LAB_PATCHED_URL,
             allowlist=["127.0.0.1"],
@@ -130,6 +131,7 @@ class TestPatchedContainer:
 # Vulnerable container
 # ---------------------------------------------------------------------------
 
+
 @lab_required(LAB_VULNERABLE_URL)
 class TestVulnerableContainer:
     """Assess the vulnerable lab container — expect POTENTIALLY_AFFECTED."""
@@ -142,8 +144,7 @@ class TestVulnerableContainer:
             verify_tls=False,
         )
         assert finding.remote_status == RemoteStatus.POTENTIALLY_AFFECTED, (
-            f"Expected POTENTIALLY_AFFECTED, got {finding.remote_status}. "
-            f"Notes: {finding.notes}"
+            f"Expected POTENTIALLY_AFFECTED, got {finding.remote_status}. Notes: {finding.notes}"
         )
 
     def test_version_older_than_patched(self):
@@ -181,6 +182,7 @@ class TestVulnerableContainer:
 # ---------------------------------------------------------------------------
 # Differential: patched vs vulnerable
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.skipif(
     not (
@@ -232,6 +234,7 @@ class TestDifferential:
 # Local audit integration (no Docker required — runs on the host)
 # ---------------------------------------------------------------------------
 
+
 class TestLocalAuditIntegration:
     """Run the local auditor on the test host.
 
@@ -261,6 +264,7 @@ class TestLocalAuditIntegration:
 
     def test_vuln_status_is_valid_enum(self):
         from php2shell_sentinel.core.models import VulnStatus
+
         report = run_local_audit()
         valid = set(VulnStatus)
         for f in report.findings:
@@ -268,8 +272,8 @@ class TestLocalAuditIntegration:
 
     def test_no_secrets_in_report(self):
         """Ensure nothing that looks like a secret leaks into the report."""
-        import json
         from php2shell_sentinel.reporting.renderer import render_json
+
         report = run_local_audit()
         text = render_json(report).lower()
         for bad in ("password", "secret", "token", "private_key", "-----begin"):

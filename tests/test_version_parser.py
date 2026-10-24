@@ -2,13 +2,13 @@
 
 import pytest
 
-from php2shell_sentinel.core.version_parser import parse_php_version, assess_version
-from php2shell_sentinel.core.models import VulnStatus, Confidence
-
+from php2shell_sentinel.core.models import Confidence, VulnStatus
+from php2shell_sentinel.core.version_parser import assess_version, parse_php_version
 
 # ---------------------------------------------------------------------------
 # parse_php_version
 # ---------------------------------------------------------------------------
+
 
 class TestParsePhpVersion:
     def test_plain_version(self):
@@ -62,6 +62,7 @@ class TestParsePhpVersion:
 # assess_version
 # ---------------------------------------------------------------------------
 
+
 class TestAssessVersion:
     def _info(self, raw: str, source: str = "cli"):
         info = parse_php_version(raw, source=source)
@@ -69,10 +70,18 @@ class TestAssessVersion:
         return info
 
     # Vulnerable versions
-    @pytest.mark.parametrize("raw", [
-        "8.5.11", "8.4.26", "8.3.35", "8.2.34",
-        "8.5.0", "8.4.1", "8.3.0",
-    ])
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            "8.5.11",
+            "8.4.26",
+            "8.3.35",
+            "8.2.34",
+            "8.5.0",
+            "8.4.1",
+            "8.3.0",
+        ],
+    )
     def test_vulnerable(self, raw: str):
         status, conf, evidence, recs = assess_version(self._info(raw))
         assert status == VulnStatus.VULNERABLE
@@ -80,19 +89,33 @@ class TestAssessVersion:
         assert any("Upgrade" in r or "upgrade" in r for r in recs)
 
     # Patched versions
-    @pytest.mark.parametrize("raw", [
-        "8.5.12", "8.4.27", "8.3.36", "8.2.35",
-        "8.5.13", "8.4.28",  # future releases should also be PATCHED
-    ])
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            "8.5.12",
+            "8.4.27",
+            "8.3.36",
+            "8.2.35",
+            "8.5.13",
+            "8.4.28",  # future releases should also be PATCHED
+        ],
+    )
     def test_patched(self, raw: str):
         status, conf, evidence, recs = assess_version(self._info(raw))
         assert status == VulnStatus.PATCHED
         assert conf == Confidence.HIGH
 
     # EOL versions
-    @pytest.mark.parametrize("raw", [
-        "8.1.29", "8.0.30", "7.4.33", "7.3.0", "5.6.40",
-    ])
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            "8.1.29",
+            "8.0.30",
+            "7.4.33",
+            "7.3.0",
+            "5.6.40",
+        ],
+    )
     def test_eol(self, raw: str):
         status, conf, evidence, recs = assess_version(self._info(raw))
         assert status == VulnStatus.UNSUPPORTED_EOL
@@ -110,6 +133,7 @@ class TestAssessVersion:
 # ---------------------------------------------------------------------------
 # patch comparison edge-cases
 # ---------------------------------------------------------------------------
+
 
 class TestPatchComparison:
     def test_exact_patched_boundary(self):

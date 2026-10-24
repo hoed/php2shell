@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 from .models import (
-    PATCHED_VERSIONS,
     EOL_BRANCHES,
+    PATCHED_VERSIONS,
     Confidence,
     PHPVersionInfo,
     VulnStatus,
@@ -17,13 +16,13 @@ from .models import (
 # Must NOT match "Apache/2.4.58" (no PHP prefix and major < 5 is never valid PHP)
 _PHP_RE = re.compile(
     r"(?i)"
-    r"(?:(?P<php_prefix>php)[/ -]?)?"       # optional "PHP" prefix
+    r"(?:(?P<php_prefix>php)[/ -]?)?"  # optional "PHP" prefix
     r"(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)"
     r"(?P<suffix>[a-z0-9._+-]*)?"
 )
 
 
-def parse_php_version(raw: str, source: str = "unknown") -> Optional[PHPVersionInfo]:
+def parse_php_version(raw: str, source: str = "unknown") -> PHPVersionInfo | None:
     """Extract a PHPVersionInfo from an arbitrary string, or return None."""
     m = _PHP_RE.search(raw.strip())
     if not m:
@@ -67,12 +66,14 @@ def assess_version(
             f"PHP {info} is on an end-of-life branch ({branch}). "
             "No official patch will be released."
         )
-        recommendations.extend([
-            f"Upgrade to a supported PHP branch (8.2, 8.3, 8.4, or 8.5).",
-            "Apply any distribution-provided backport if available (Debian LTS, RHEL, etc.).",
-            "Apply temporary mitigations: memory_limit=-1, "
-            "session.upload_progress.enabled=0, fatal_error_backtraces=0.",
-        ])
+        recommendations.extend(
+            [
+                "Upgrade to a supported PHP branch (8.2, 8.3, 8.4, or 8.5).",
+                "Apply any distribution-provided backport if available (Debian LTS, RHEL, etc.).",
+                "Apply temporary mitigations: memory_limit=-1, "
+                "session.upload_progress.enabled=0, fatal_error_backtraces=0.",
+            ]
+        )
         return VulnStatus.UNSUPPORTED_EOL, Confidence.HIGH, evidence, recommendations
 
     # ── Supported branch ─────────────────────────────────────────────────────
@@ -86,22 +87,20 @@ def assess_version(
     current = info.as_tuple()
 
     if current >= patched:
-        evidence.append(
-            f"PHP {info} >= patched release {patched_raw} on branch {branch}."
-        )
+        evidence.append(f"PHP {info} >= patched release {patched_raw} on branch {branch}.")
         return VulnStatus.PATCHED, Confidence.HIGH, evidence, recommendations
     else:
-        evidence.append(
-            f"PHP {info} < patched release {patched_raw} on branch {branch}."
+        evidence.append(f"PHP {info} < patched release {patched_raw} on branch {branch}.")
+        recommendations.extend(
+            [
+                f"Upgrade to PHP {patched_raw} immediately (released 2026-10-21).",
+                "Apply WAF rules to restrict session upload-progress endpoints.",
+                "Set memory_limit=-1 as a partial mitigation for CVE-2026-109618.",
+                "Set session.upload_progress.enabled=0 in php.ini.",
+                "Set fatal_error_backtraces=0 in php.ini.",
+                "Monitor https://www.php.net/ChangeLog-8.php for follow-up patches.",
+            ]
         )
-        recommendations.extend([
-            f"Upgrade to PHP {patched_raw} immediately (released 2026-10-21).",
-            "Apply WAF rules to restrict session upload-progress endpoints.",
-            "Set memory_limit=-1 as a partial mitigation for CVE-2026-109618.",
-            "Set session.upload_progress.enabled=0 in php.ini.",
-            "Set fatal_error_backtraces=0 in php.ini.",
-            "Monitor https://www.php.net/ChangeLog-8.php for follow-up patches.",
-        ])
         return VulnStatus.VULNERABLE, Confidence.HIGH, evidence, recommendations
 
 

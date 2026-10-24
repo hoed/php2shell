@@ -7,9 +7,8 @@ isolated, deterministic, no global patching, no network calls.
 from __future__ import annotations
 
 import httpx
-import pytest
 
-from php2shell_sentinel.core.fingerprint import fingerprint, FingerprintResult
+from php2shell_sentinel.core.fingerprint import FingerprintResult, fingerprint
 from php2shell_sentinel.core.models import Confidence
 
 BASE = "https://example.com"
@@ -51,13 +50,14 @@ def _make_transport(
 # Header correlation
 # ---------------------------------------------------------------------------
 
+
 class TestFingerprintHeaders:
     def test_version_from_x_powered_by(self):
-        t = _make_transport({
-            ("HEAD", f"{BASE}/"): httpx.Response(
-                200, headers={"X-Powered-By": "PHP/8.4.26"}
-            ),
-        })
+        t = _make_transport(
+            {
+                ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"X-Powered-By": "PHP/8.4.26"}),
+            }
+        )
         result = fingerprint(BASE + "/", _transport=t)
 
         assert result.php_detected is True
@@ -66,31 +66,37 @@ class TestFingerprintHeaders:
         assert result.confidence in (Confidence.MEDIUM, Confidence.HIGH)
 
     def test_phpsessid_in_head_response(self):
-        t = _make_transport({
-            ("HEAD", f"{BASE}/"): httpx.Response(
-                200, headers={"Set-Cookie": "PHPSESSID=abc123; path=/"}
-            ),
-        })
+        t = _make_transport(
+            {
+                ("HEAD", f"{BASE}/"): httpx.Response(
+                    200, headers={"Set-Cookie": "PHPSESSID=abc123; path=/"}
+                ),
+            }
+        )
         result = fingerprint(BASE + "/", _transport=t)
 
         assert result.php_detected is True
         assert any("PHPSESSID" in e for e in result.evidence)
 
     def test_no_php_signals_returns_low_confidence(self):
-        t = _make_transport({
-            ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"Server": "nginx/1.24"}),
-        })
+        t = _make_transport(
+            {
+                ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"Server": "nginx/1.24"}),
+            }
+        )
         result = fingerprint(BASE + "/", _transport=t)
 
         assert result.php_detected is False
         assert result.confidence == Confidence.LOW
 
     def test_php_version_in_server_header(self):
-        t = _make_transport({
-            ("HEAD", f"{BASE}/"): httpx.Response(
-                200, headers={"Server": "Apache/2.4.58 PHP/8.3.35"}
-            ),
-        })
+        t = _make_transport(
+            {
+                ("HEAD", f"{BASE}/"): httpx.Response(
+                    200, headers={"Server": "Apache/2.4.58 PHP/8.3.35"}
+                ),
+            }
+        )
         result = fingerprint(BASE + "/", _transport=t)
 
         assert result.php_detected is True
@@ -98,11 +104,11 @@ class TestFingerprintHeaders:
         assert result.version_hint.branch == "8.3"
 
     def test_x_php_version_header(self):
-        t = _make_transport({
-            ("HEAD", f"{BASE}/"): httpx.Response(
-                200, headers={"X-PHP-Version": "8.2.34"}
-            ),
-        })
+        t = _make_transport(
+            {
+                ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"X-PHP-Version": "8.2.34"}),
+            }
+        )
         result = fingerprint(BASE + "/", _transport=t)
 
         assert result.php_detected is True
@@ -114,51 +120,60 @@ class TestFingerprintHeaders:
 # Error-page probe
 # ---------------------------------------------------------------------------
 
+
 class TestFingerprintErrorPage:
     def test_php_fatal_error_in_body(self):
-        t = _make_transport({
-            ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"Server": "Apache"}),
-            ("GET", f"{BASE}/__php2shell_sentinel_probe__.php"): httpx.Response(
-                500,
-                text="<b>Fatal error</b>: Uncaught Error in /var/www/html/index.php on line 1",
-            ),
-        })
+        t = _make_transport(
+            {
+                ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"Server": "Apache"}),
+                ("GET", f"{BASE}/__php2shell_sentinel_probe__.php"): httpx.Response(
+                    500,
+                    text="<b>Fatal error</b>: Uncaught Error in /var/www/html/index.php on line 1",
+                ),
+            }
+        )
         result = fingerprint(BASE + "/", _transport=t)
 
         assert result.php_detected is True
         assert any("Fatal error" in e or "error-page" in e.lower() for e in result.evidence)
 
     def test_version_extracted_from_error_body(self):
-        t = _make_transport({
-            ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"Server": "Apache"}),
-            ("GET", f"{BASE}/__php2shell_sentinel_probe__.php"): httpx.Response(
-                500,
-                text="PHP 8.4.26 Fatal error: something wrong on line 1",
-            ),
-        })
+        t = _make_transport(
+            {
+                ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"Server": "Apache"}),
+                ("GET", f"{BASE}/__php2shell_sentinel_probe__.php"): httpx.Response(
+                    500,
+                    text="PHP 8.4.26 Fatal error: something wrong on line 1",
+                ),
+            }
+        )
         result = fingerprint(BASE + "/", _transport=t)
 
         assert result.version_hint is not None
         assert result.version_hint.patch == 26
 
     def test_clean_404_no_php_evidence(self):
-        t = _make_transport({
-            ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"Server": "nginx"}),
-            ("GET", f"{BASE}/__php2shell_sentinel_probe__.php"): httpx.Response(
-                404, text="<html><body>Not Found</body></html>"
-            ),
-        })
+        t = _make_transport(
+            {
+                ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"Server": "nginx"}),
+                ("GET", f"{BASE}/__php2shell_sentinel_probe__.php"): httpx.Response(
+                    404, text="<html><body>Not Found</body></html>"
+                ),
+            }
+        )
         result = fingerprint(BASE + "/", _transport=t)
         assert result.php_detected is False
 
     def test_stack_trace_pattern_detected(self):
-        t = _make_transport({
-            ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"Server": "Apache"}),
-            ("GET", f"{BASE}/__php2shell_sentinel_probe__.php"): httpx.Response(
-                500,
-                text="Stack trace:\n#0 /var/www/html/index.php(12): doSomething()\n",
-            ),
-        })
+        t = _make_transport(
+            {
+                ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"Server": "Apache"}),
+                ("GET", f"{BASE}/__php2shell_sentinel_probe__.php"): httpx.Response(
+                    500,
+                    text="Stack trace:\n#0 /var/www/html/index.php(12): doSomething()\n",
+                ),
+            }
+        )
         result = fingerprint(BASE + "/", _transport=t)
         assert result.php_detected is True
 
@@ -167,12 +182,10 @@ class TestFingerprintErrorPage:
 # Resilience / error handling
 # ---------------------------------------------------------------------------
 
+
 class TestFingerprintResilience:
     def test_connection_refused_returns_safe_result(self):
-        t = _make_transport(
-            {},
-            default=None,  # will raise on every request
-        )
+
         # Override with error-raising handler
         def _refusing(req: httpx.Request) -> httpx.Response:
             raise httpx.ConnectError("connection refused")
@@ -195,11 +208,11 @@ class TestFingerprintResilience:
         assert result.php_detected is False
 
     def test_techniques_recorded(self):
-        t = _make_transport({
-            ("HEAD", f"{BASE}/"): httpx.Response(
-                200, headers={"X-Powered-By": "PHP/8.4.26"}
-            ),
-        })
+        t = _make_transport(
+            {
+                ("HEAD", f"{BASE}/"): httpx.Response(200, headers={"X-Powered-By": "PHP/8.4.26"}),
+            }
+        )
         result = fingerprint(BASE + "/", _transport=t)
         assert "header-correlation" in result.techniques_used
 
@@ -207,6 +220,7 @@ class TestFingerprintResilience:
 # ---------------------------------------------------------------------------
 # Dataclass contract
 # ---------------------------------------------------------------------------
+
 
 class TestFingerprintResultContract:
     def test_default_values(self):

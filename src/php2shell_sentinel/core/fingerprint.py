@@ -17,7 +17,6 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Optional
 from urllib.parse import urljoin
 
 import httpx
@@ -28,8 +27,7 @@ from .version_parser import parse_php_version
 logger = logging.getLogger(__name__)
 
 _USER_AGENT = (
-    "PHP2Shell-Sentinel/1.0 (Security Assessment; "
-    "https://github.com/your-org/php2shell-sentinel)"
+    "PHP2Shell-Sentinel/1.0 (Security Assessment; https://github.com/your-org/php2shell-sentinel)"
 )
 
 # Patterns that appear in PHP default error pages
@@ -45,9 +43,7 @@ _PHP_ERROR_PATTERNS = [
 _PHP_SESSION_COOKIE_RE = re.compile(r"PHPSESSID", re.I)
 
 # Version extraction from error page body
-_VERSION_FROM_BODY_RE = re.compile(
-    r"PHP[/ ](?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)", re.I
-)
+_VERSION_FROM_BODY_RE = re.compile(r"PHP[/ ](?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)", re.I)
 
 
 @dataclass
@@ -56,7 +52,7 @@ class FingerprintResult:
 
     target: str
     php_detected: bool = False
-    version_hint: Optional[PHPVersionInfo] = None
+    version_hint: PHPVersionInfo | None = None
     confidence: Confidence = Confidence.LOW
     evidence: list[str] = field(default_factory=list)
     techniques_used: list[str] = field(default_factory=list)
@@ -72,7 +68,7 @@ def fingerprint(
     target: str,
     timeout: float = 10.0,
     verify_tls: bool = True,
-    _transport: Optional[httpx.BaseTransport] = None,
+    _transport: httpx.BaseTransport | None = None,
 ) -> FingerprintResult:
     """
     Run all passive fingerprinting probes against *target*.
@@ -88,16 +84,23 @@ def fingerprint(
     """
     result = FingerprintResult(target=target)
 
-    client_kwargs: dict = dict(
-        verify=verify_tls,
-        timeout=timeout,
-        headers={"User-Agent": _USER_AGENT},
-        follow_redirects=True,
-    )
-    if _transport is not None:
-        client_kwargs["transport"] = _transport
+    if _transport is None:
+        client = httpx.Client(
+            verify=verify_tls,
+            timeout=timeout,
+            headers={"User-Agent": _USER_AGENT},
+            follow_redirects=True,
+        )
+    else:
+        client = httpx.Client(
+            verify=verify_tls,
+            timeout=timeout,
+            headers={"User-Agent": _USER_AGENT},
+            follow_redirects=True,
+            transport=_transport,
+        )
 
-    with httpx.Client(**client_kwargs) as client:
+    with client:
         _probe_headers(client, target, result)
         _probe_error_page(client, target, result)
         _probe_cookie(client, target, result)
@@ -198,15 +201,11 @@ def _probe_error_page(client: httpx.Client, target: str, result: FingerprintResu
             info = parse_php_version(raw, source="error-page-body")
             if info:
                 result.version_hint = info
-                result.evidence.append(
-                    f"PHP version extracted from error page body: {info}"
-                )
+                result.evidence.append(f"PHP version extracted from error page body: {info}")
 
         # HTTP 404 with PHP-style body is still evidence
         if resp.status_code in (404, 500) and result.php_detected:
-            result.evidence.append(
-                f"PHP-like {resp.status_code} response at probe URL"
-            )
+            result.evidence.append(f"PHP-like {resp.status_code} response at probe URL")
 
     except httpx.HTTPError as exc:
         result.warnings.append(f"Error-page probe failed: {exc}")
@@ -227,9 +226,7 @@ def _probe_cookie(client: httpx.Client, target: str, result: FingerprintResult) 
         for cookie in resp.cookies.keys():
             if _PHP_SESSION_COOKIE_RE.match(cookie):
                 result.php_detected = True
-                result.evidence.append(
-                    f"PHP session cookie {cookie!r} set by {index_url}"
-                )
+                result.evidence.append(f"PHP session cookie {cookie!r} set by {index_url}")
                 break
 
         # Some PHP apps use a custom session name — check raw header too
@@ -261,7 +258,7 @@ def _probe_timing(client: httpx.Client, target: str, result: FingerprintResult) 
     php_url = urljoin(target.rstrip("/") + "/", "index.php")
     static_url = urljoin(target.rstrip("/") + "/", "robots.txt")
 
-    def _avg_ms(url: str) -> Optional[float]:
+    def _avg_ms(url: str) -> float | None:
         times: list[float] = []
         for _ in range(_TIMING_SAMPLES):
             try:
@@ -285,8 +282,7 @@ def _probe_timing(client: httpx.Client, target: str, result: FingerprintResult) 
             )
             if diff > _TIMING_THRESHOLD_MS:
                 result.evidence.append(
-                    f"PHP interpreter latency signature detected "
-                    f"(diff > {_TIMING_THRESHOLD_MS}ms)"
+                    f"PHP interpreter latency signature detected (diff > {_TIMING_THRESHOLD_MS}ms)"
                 )
                 result.php_detected = True
 

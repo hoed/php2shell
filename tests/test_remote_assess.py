@@ -1,21 +1,21 @@
 """Tests for remote_assess module."""
 
-import pytest
 import httpx
+import pytest
 import respx
 
+from php2shell_sentinel.core.models import RemoteStatus, VulnStatus
 from php2shell_sentinel.core.remote_assess import (
+    MAX_TARGETS,
     assess_remote,
     assess_remote_batch,
     validate_scope,
-    MAX_TARGETS,
 )
-from php2shell_sentinel.core.models import VulnStatus, RemoteStatus
-
 
 # ---------------------------------------------------------------------------
 # Scope validation
 # ---------------------------------------------------------------------------
+
 
 class TestValidateScope:
     def test_exact_match(self):
@@ -28,10 +28,10 @@ class TestValidateScope:
         assert validate_scope("https://example.com", []) is False
 
     def test_multiple_allowlist_entries(self):
-        assert validate_scope(
-            "https://target.example.org",
-            ["other.com", "target.example.org"]
-        ) is True
+        assert (
+            validate_scope("https://target.example.org", ["other.com", "target.example.org"])
+            is True
+        )
 
     def test_subdomain_not_parent(self):
         # "example.com" in allowlist should NOT match "evil.example.com"
@@ -44,6 +44,7 @@ class TestValidateScope:
 # ---------------------------------------------------------------------------
 # Remote assess — mocked HTTP (use respx.mock as context manager, not decorator)
 # ---------------------------------------------------------------------------
+
 
 class TestAssessRemote:
     def test_vulnerable_version_in_header(self):
@@ -97,9 +98,7 @@ class TestAssessRemote:
 
     def test_timeout_handled_gracefully(self):
         with respx.mock:
-            respx.head("https://example.com/").mock(
-                side_effect=httpx.TimeoutException("timed out")
-            )
+            respx.head("https://example.com/").mock(side_effect=httpx.TimeoutException("timed out"))
             finding = assess_remote(
                 "https://example.com/",
                 allowlist=["example.com"],
@@ -110,9 +109,7 @@ class TestAssessRemote:
 
     def test_connection_error_handled(self):
         with respx.mock:
-            respx.head("https://example.com/").mock(
-                side_effect=httpx.ConnectError("refused")
-            )
+            respx.head("https://example.com/").mock(side_effect=httpx.ConnectError("refused"))
             finding = assess_remote(
                 "https://example.com/",
                 allowlist=["example.com"],

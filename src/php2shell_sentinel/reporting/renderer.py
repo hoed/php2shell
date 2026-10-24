@@ -4,26 +4,24 @@ from __future__ import annotations
 
 import dataclasses
 import json
-import textwrap
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich import box
 from rich.text import Text
 
 from ..core.models import (
-    AssessmentReport,
-    VulnerabilityFinding,
-    VulnStatus,
-    RemoteStatus,
-    Confidence,
+    ADVISORY_URLS,
     CVE_IDS,
     CVSS_SCORE,
     PATCHED_VERSIONS,
-    ADVISORY_URLS,
+    AssessmentReport,
+    RemoteStatus,
+    VulnerabilityFinding,
+    VulnStatus,
 )
 
 console = Console()
@@ -137,10 +135,10 @@ def _print_finding(index: int, f: VulnerabilityFinding) -> None:
 # ---------------------------------------------------------------------------
 
 
-def render_json(report: AssessmentReport, output_path: Optional[str] = None) -> str:
+def render_json(report: AssessmentReport, output_path: str | None = None) -> str:
     """Serialise report to JSON. Writes to file if output_path given."""
 
-    def _default(obj):  # noqa: ANN001
+    def _default(obj: Any) -> Any:
         if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
             return dataclasses.asdict(obj)
         if hasattr(obj, "value"):  # Enum
@@ -160,7 +158,7 @@ def render_json(report: AssessmentReport, output_path: Optional[str] = None) -> 
     return text
 
 
-def _serialise_finding(f: VulnerabilityFinding) -> dict:
+def _serialise_finding(f: VulnerabilityFinding) -> dict[str, object]:
     return {
         "target": f.target,
         "timestamp": f.timestamp,
@@ -182,7 +180,7 @@ def _serialise_finding(f: VulnerabilityFinding) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def render_markdown(report: AssessmentReport, output_path: Optional[str] = None) -> str:
+def render_markdown(report: AssessmentReport, output_path: str | None = None) -> str:
     lines: list[str] = [
         "# PHP2Shell Sentinel — Assessment Report",
         "",
@@ -203,9 +201,7 @@ def render_markdown(report: AssessmentReport, output_path: Optional[str] = None)
 
     for i, f in enumerate(report.findings, 1):
         version_str = str(f.php_version) if f.php_version else "not detected"
-        status_str = (
-            f.remote_status.value if f.remote_status else f.vuln_status.value
-        )
+        status_str = f.remote_status.value if f.remote_status else f.vuln_status.value
 
         lines += [
             f"### [{i}] {f.target}",

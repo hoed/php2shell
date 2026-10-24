@@ -10,36 +10,32 @@ from __future__ import annotations
 import ipaddress
 import logging
 import time
-from typing import Optional
 from urllib.parse import urlparse
 
 import httpx
 
+from .fingerprint import fingerprint as _fingerprint
 from .models import (
     AssessmentReport,
     Confidence,
     RemoteStatus,
     VulnerabilityFinding,
     VulnStatus,
-    PATCHED_VERSIONS,
-    EOL_BRANCHES,
 )
 from .version_parser import assess_version, parse_php_version
-from .fingerprint import fingerprint as _fingerprint
 
 logger = logging.getLogger(__name__)
 
 # Sentinel user-agent — identify ourselves clearly
 _USER_AGENT = (
-    "PHP2Shell-Sentinel/1.0 (Security Assessment; "
-    "https://github.com/your-org/php2shell-sentinel)"
+    "PHP2Shell-Sentinel/1.0 (Security Assessment; https://github.com/your-org/php2shell-sentinel)"
 )
 
 # Headers that may leak PHP version
 _PHP_HEADERS = ("x-powered-by", "server", "x-php-version")
 
 # Default request config
-DEFAULT_TIMEOUT = 10.0   # seconds
+DEFAULT_TIMEOUT = 10.0  # seconds
 DEFAULT_RATE_LIMIT_DELAY = 1.0  # seconds between requests
 MAX_TARGETS = 50  # hard limit per session
 
@@ -61,7 +57,7 @@ def validate_scope(target: str, allowlist: list[str]) -> bool:
     return False
 
 
-def _extract_host(url: str) -> Optional[str]:
+def _extract_host(url: str) -> str | None:
     try:
         parsed = urlparse(url if "://" in url else f"https://{url}")
         return parsed.hostname
@@ -113,8 +109,8 @@ def assess_remote(
 
     # ── HTTP request ─────────────────────────────────────────────────────────
     headers_received: dict[str, str] = {}
-    status_code: Optional[int] = None
-    error_note: Optional[str] = None
+    status_code: int | None = None
+    error_note: str | None = None
 
     try:
         with httpx.Client(
@@ -133,7 +129,7 @@ def assess_remote(
             status_code = resp.status_code
             headers_received = dict(resp.headers)
 
-    except httpx.TimeoutException as exc:
+    except httpx.TimeoutException:
         error_note = f"Request to {target} timed out after {timeout}s."
     except httpx.ConnectError as exc:
         error_note = f"Connection to {target} failed: {exc}"
@@ -154,7 +150,7 @@ def assess_remote(
     finding.evidence.append(f"HTTP status: {status_code}")
 
     # ── header analysis ───────────────────────────────────────────────────────
-    php_version_found: Optional[str] = None
+    php_version_found: str | None = None
     for header_name in _PHP_HEADERS:
         value = headers_received.get(header_name, "")
         if not value:
@@ -184,11 +180,13 @@ def assess_remote(
             finding.confidence = Confidence.LOW
     else:
         # No PHP indicator found — may be hidden or not PHP
-        finding.notes.extend([
-            "No PHP version header detected. Server may hide version information.",
-            "Absence of PHP headers does NOT confirm the server is safe.",
-            "Consider local audit or authenticated assessment for definitive results.",
-        ])
+        finding.notes.extend(
+            [
+                "No PHP version header detected. Server may hide version information.",
+                "Absence of PHP headers does NOT confirm the server is safe.",
+                "Consider local audit or authenticated assessment for definitive results.",
+            ]
+        )
         finding.remote_status = RemoteStatus.INCONCLUSIVE
         finding.confidence = Confidence.LOW
 
@@ -196,10 +194,8 @@ def assess_remote(
     if finding.remote_status == RemoteStatus.INCONCLUSIVE or finding.php_version is None:
         try:
             fp = _fingerprint(target, timeout=timeout, verify_tls=verify_tls)
-            finding.checks_performed.append('deep-fingerprint')
-            finding.evidence.extend(
-                [f'[fingerprint] {e}' for e in fp.evidence]
-            )
+            finding.checks_performed.append("deep-fingerprint")
+            finding.evidence.extend([f"[fingerprint] {e}" for e in fp.evidence])
             if fp.version_hint and finding.php_version is None:
                 finding.php_version = fp.version_hint
                 status, conf, evd, recs = assess_version(fp.version_hint)
@@ -210,16 +206,16 @@ def assess_remote(
                 finding.remote_status = _map_remote_status(status)
             elif fp.php_detected and finding.remote_status == RemoteStatus.INCONCLUSIVE:
                 finding.evidence.append(
-                    'PHP presence inferred from fingerprinting (no version obtained)'
+                    "PHP presence inferred from fingerprinting (no version obtained)"
                 )
                 finding.remote_status = RemoteStatus.POTENTIALLY_AFFECTED
                 finding.confidence = Confidence.LOW
                 finding.notes.append(
-                    'PHP detected via deep fingerprinting but version could not be '
-                    'determined. Manual verification recommended.'
+                    "PHP detected via deep fingerprinting but version could not be "
+                    "determined. Manual verification recommended."
                 )
         except Exception as _fp_exc:  # noqa: BLE001
-            logger.debug('Fingerprint probe failed: %s', _fp_exc)
+            logger.debug("Fingerprint probe failed: %s", _fp_exc)
 
     _add_universal_recommendations(finding)
     return finding
@@ -240,8 +236,7 @@ def assess_remote_batch(
     """Assess multiple targets and collect into a single report."""
     if len(targets) > MAX_TARGETS:
         raise ValueError(
-            f"Too many targets ({len(targets)}). "
-            f"Maximum per session is {MAX_TARGETS}."
+            f"Too many targets ({len(targets)}). Maximum per session is {MAX_TARGETS}."
         )
 
     report = AssessmentReport(scope=f"remote-assess:{','.join(targets[:3])}...")
