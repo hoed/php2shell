@@ -363,7 +363,7 @@ You can now use the command line form in your browser.
 **3. Use the Web Interface**
 
 Open the target URL in your browser:
-`https://www.bkn.go.id/php2shell/index.php`
+`https://staging.example.com/php2shell/index.php`
 
 You will now see a text box where you can type commands like `whoami` or `cat /etc/passwd` directly in the URL parameters.
 
