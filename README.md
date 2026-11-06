@@ -679,4 +679,3 @@ MIT © PHP2Shell Sentinel Contributors — see [LICENSE](LICENSE)
 [Report a Bug](https://github.com/hoed/php2shell/issues) · [Request a Feature](https://github.com/hoed/php2shell/issues) · [Security Policy](https://github.com/hoed/php2shell/security)
 
 </div>
-```
