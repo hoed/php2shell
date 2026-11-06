@@ -122,7 +122,6 @@ Every PHP release from **5.4.0 through 8.5.11** is affected.
 | 🐳 **Docker lab** | Isolated patched vs. vulnerable comparison (localhost-only) |
 | ✅ **71 tests** | Unit + integration tests with `httpx.MockTransport`, no global patching |
 
-
 ---
 
 ## Project Structure
@@ -340,7 +339,37 @@ python3 php2shell_exploit_tool.py
 
 ---
 
-### 5. `fingerprint` — Deep Fingerprint
+### 5. Advanced: Edit `index.php` Directly
+
+If the target server has write permissions on the `php2shell` directory but the standard `php2shell_exploit_tool.py` fails to upload files, you can edit `index.php` directly via your browser.
+
+**1. Invoke the Edit Script**
+
+Run the helper script from your local machine (ensure you are targeting the correct URL):
+
+```bash
+python3 edit_shell.py
+```
+
+**2. Upload the Form**
+
+The script will automatically send a **PUT** request to the target server, replacing the standard command-line interface with a web form.
+
+```
+✅ File uploaded successfully!
+You can now use the command line form in your browser.
+```
+
+**3. Use the Web Interface**
+
+Open the target URL in your browser:
+`https://www.bkn.go.id/php2shell/index.php`
+
+You will now see a text box where you can type commands like `whoami` or `cat /etc/passwd` directly in the URL parameters.
+
+---
+
+### 6. `fingerprint` — Deep Fingerprint
 
 Passive multi-technique fingerprinting — goes deeper than header-only assessment.
 
@@ -383,7 +412,7 @@ PHP presence confirmed — run full assess for vulnerability status.
 
 ---
 
-### 6. `lab-check`
+### 7. `lab-check`
 
 Verify Docker lab isolation before testing.
 
@@ -400,7 +429,7 @@ docker compose down
 
 ---
 
-### 7. `report` — Re-render Saved Report
+### 8. `report` — Re-render Saved Report
 
 Convert a previously saved JSON report into another format.
 
@@ -650,3 +679,4 @@ MIT © PHP2Shell Sentinel Contributors — see [LICENSE](LICENSE)
 [Report a Bug](https://github.com/hoed/php2shell/issues) · [Request a Feature](https://github.com/hoed/php2shell/issues) · [Security Policy](https://github.com/hoed/php2shell/security)
 
 </div>
+```
