@@ -645,8 +645,8 @@ MIT © PHP2Shell Sentinel Contributors — see [LICENSE](LICENSE)
 
 <div align="center">
 
-**Built for defensive security — not exploitation.**
+**Built for defensive security**
 
-[Report a Bug](https://github.com/your-org/php2shell-sentinel/issues) · [Request a Feature](https://github.com/your-org/php2shell-sentinel/issues) · [Security Policy](https://github.com/your-org/php2shell-sentinel/security)
+[Report a Bug](https://github.com/hoed/php2shell/issues) · [Request a Feature](https://github.com/hoed/php2shell/issues) · [Security Policy](https://github.com/hoed/php2shell/security)
 
 </div>
