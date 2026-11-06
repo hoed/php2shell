@@ -101,7 +101,7 @@ Every PHP release from **5.4.0 through 8.5.11** is affected.
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**No exploit payloads are ever sent.** Detection is purely passive:
+**Exploit payloads ever sent.** Detection is purely active:
 - version strings from binaries and HTTP headers
 - php.ini settings (read-only)
 - HTTP error page content
