@@ -1,4 +1,3 @@
-```markdown
 <div align="center">
 
 # 🛡️ PHP2Shell Sentinel
@@ -651,4 +650,3 @@ MIT © PHP2Shell Sentinel Contributors — see [LICENSE](LICENSE)
 [Report a Bug](https://github.com/your-org/php2shell-sentinel/issues) · [Request a Feature](https://github.com/your-org/php2shell-sentinel/issues) · [Security Policy](https://github.com/your-org/php2shell-sentinel/security)
 
 </div>
-```
