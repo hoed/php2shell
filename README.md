@@ -649,7 +649,7 @@ Contributions are welcome for:
 ### Development setup
 
 ```bash
-git clone https://github.com/your-org/php2shell-sentinel.git
+git clone https://github.com/hoed/php2shell.git
 cd php2shell-sentinel
 python3 -m venv.venv && source.venv/bin/activate
 pip install -e ".[dev]"
