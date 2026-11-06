@@ -121,7 +121,7 @@ Every PHP release from **5.4.0 through 8.5.11** is affected.
 | 📝 **Multiple formats** | Terminal (Rich), JSON, and Markdown report output |
 | 🐳 **Docker lab** | Isolated patched vs. vulnerable comparison (localhost-only) |
 | ✅ **71 tests** | Unit + integration tests with `httpx.MockTransport`, no global patching |
-| 🚫 **No weaponisation** | No RCE payloads, no shells, no auto-exploitation |
+
 
 ---
 
