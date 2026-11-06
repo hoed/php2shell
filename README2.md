@@ -1,4 +1,3 @@
-```markdown
 <div align="center">
 
 # 🛡️ PHP2Shell Sentinel
@@ -15,8 +14,8 @@
 
 Assess exposure to **CVE-2026-109618** and **CVE-2026-109619** (PHP2Shell) on Kali Linux and Debian-based systems.
 
-> ⚠️ **Authorised use only.** This toolkit is for defensive security research 
-> and authorised penetration testing only. Never assess systems you do not own 
+> ⚠️ **Authorised use only.** This toolkit is for defensive security research  
+> and authorised penetration testing only. Never assess systems you do not own  
 > or have explicit written permission to test.
 
 </div>
@@ -32,13 +31,12 @@ Assess exposure to **CVE-2026-109618** and **CVE-2026-109619** (PHP2Shell) on Ka
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
- - [version-check](#1-version-check)
- - [audit-local](#2-audit-local)
- - [assess](#3-assess-remote-target)
- - [reverse-shell-execution](#4-reverse-shell-execution-poc)
- - [fingerprint](#5-deep-fingerprint)
- - [lab-check](#6-lab-check)
- - [report](#7-re-render-report)
+  - [version-check](#1-version-check)
+  - [audit-local](#2-audit-local)
+  - [assess](#3-assess-remote-target)
+  - [fingerprint](#4-deep-fingerprint)
+  - [lab-check](#5-lab-check)
+  - [report](#6-re-render-report)
 - [Output Example](#output-example)
 - [Docker Lab](#docker-lab)
 - [Temporary Mitigations](#temporary-mitigations)
@@ -74,7 +72,7 @@ Every PHP release from **5.4.0 through 8.5.11** is affected.
 | 8.2 | **8.2.35** | 🔒 Security-only |
 | 8.1 and older | ❌ No patch | End-of-life |
 
-> PHP 8.1 and older will **not** receive an official fix. 
+> PHP 8.1 and older will **not** receive an official fix.  
 > Upgrade to a supported branch (8.2+) immediately.
 
 ---
@@ -83,22 +81,22 @@ Every PHP release from **5.4.0 through 8.5.11** is affected.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ PHP2Shell Sentinel │
+│                    PHP2Shell Sentinel                           │
 ├────────────────────┬────────────────────┬───────────────────────┤
-│ LOCAL AUDIT │ REMOTE ASSESS │ DEEP FINGERPRINT │
-│ │ │ │
-│ • Find PHP bins │ • HTTP HEAD/GET │ • Header correlation │
-│ • php --version │ • Header analysis │ • Error-page probe │
-│ • php.ini review │ • Scope allowlist │ • PHPSESSID cookie │
-│ • FPM pool check │ • Rate limiting │ • Response timing │
-│ │ • TLS enforced │ │
+│   LOCAL AUDIT      │  REMOTE ASSESS     │  DEEP FINGERPRINT     │
+│                    │                    │                       │
+│ • Find PHP bins    │ • HTTP HEAD/GET    │ • Header correlation  │
+│ • php --version    │ • Header analysis  │ • Error-page probe    │
+│ • php.ini review   │ • Scope allowlist  │ • PHPSESSID cookie    │
+│ • FPM pool check   │ • Rate limiting    │ • Response timing     │
+│                    │ • TLS enforced     │                       │
 ├────────────────────┴────────────────────┴───────────────────────┤
-│ VERSION COMPARISON │
-│ Detected version vs Official patch matrix │
-│ VULNERABLE / PATCHED / UNSUPPORTED_EOL / UNKNOWN │
+│                    VERSION COMPARISON                           │
+│         Detected version  vs  Official patch matrix            │
+│   VULNERABLE / PATCHED / UNSUPPORTED_EOL / UNKNOWN             │
 ├─────────────────────────────────────────────────────────────────┤
-│ REPORTING │
-│ Terminal (Rich) │ JSON │ Markdown │
+│                    REPORTING                                    │
+│         Terminal (Rich)  │  JSON  │  Markdown                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -132,45 +130,45 @@ Every PHP release from **5.4.0 through 8.5.11** is affected.
 php2shell-sentinel/
 │
 ├── src/php2shell_sentinel/
-│ ├── core/
-│ │ ├── models.py # Data models: VulnStatus, PHPVersionInfo, reports
-│ │ ├── version_parser.py # PHP version parsing + patch matrix comparison
-│ │ ├── local_audit.py # Local binary, php.ini, FPM audit (read-only)
-│ │ ├── remote_assess.py # HTTP header assessment + scope allowlist
-│ │ ├── fingerprint.py # Deep passive fingerprinting (4 techniques)
-│ │ └── lab_check.py # Docker lab isolation verifier
-│ ├── reporting/
-│ │ └── renderer.py # Terminal (Rich), JSON, Markdown output
-│ └── cli/
-│ └── main.py # Typer CLI — 6 commands
+│   ├── core/
+│   │   ├── models.py          # Data models: VulnStatus, PHPVersionInfo, reports
+│   │   ├── version_parser.py  # PHP version parsing + patch matrix comparison
+│   │   ├── local_audit.py     # Local binary, php.ini, FPM audit (read-only)
+│   │   ├── remote_assess.py   # HTTP header assessment + scope allowlist
+│   │   ├── fingerprint.py     # Deep passive fingerprinting (4 techniques)
+│   │   └── lab_check.py       # Docker lab isolation verifier
+│   ├── reporting/
+│   │   └── renderer.py        # Terminal (Rich), JSON, Markdown output
+│   └── cli/
+│       └── main.py            # Typer CLI — 6 commands
 │
 ├── tests/
-│ ├── test_version_parser.py # 22 tests: parsing, patch comparison, edge cases
-│ ├── test_remote_assess.py # 14 tests: scope validation, HTTP header analysis
-│ ├── test_fingerprint.py # 14 tests: all 4 fingerprint techniques
-│ ├── test_reporting.py # 10 tests: JSON and Markdown rendering
-│ └── test_integration_lab.py # 21 tests: real Docker lab + local host audit
+│   ├── test_version_parser.py  # 22 tests: parsing, patch comparison, edge cases
+│   ├── test_remote_assess.py   # 14 tests: scope validation, HTTP header analysis
+│   ├── test_fingerprint.py     # 14 tests: all 4 fingerprint techniques
+│   ├── test_reporting.py       # 10 tests: JSON and Markdown rendering
+│   └── test_integration_lab.py # 21 tests: real Docker lab + local host audit
 │
 ├── lab/
-│ ├── docker-compose.yml # Isolated lab (127.0.0.1-only ports)
-│ ├── php-safe.ini # Mitigated php.ini for patched container
-│ ├── php-default.ini # Default php.ini for vulnerable container
-│ └── www/
-│ ├── patched/ # Patched PHP reference page
-│ └── vulnerable/ # Vulnerable PHP detection page
+│   ├── docker-compose.yml     # Isolated lab (127.0.0.1-only ports)
+│   ├── php-safe.ini           # Mitigated php.ini for patched container
+│   ├── php-default.ini        # Default php.ini for vulnerable container
+│   └── www/
+│       ├── patched/           # Patched PHP reference page
+│       └── vulnerable/        # Vulnerable PHP detection page
 │
 ├── docs/
-│ ├── methodology.md # CVE technical background + detection approach
-│ └── remediation.md # Step-by-step upgrade and mitigation guide
+│   ├── methodology.md         # CVE technical background + detection approach
+│   └── remediation.md         # Step-by-step upgrade and mitigation guide
 │
 ├── examples/
-│ ├── config.yaml # Sample scope allowlist configuration
-│ └── sample-report.json # Sanitised example report output
+│   ├── config.yaml            # Sample scope allowlist configuration
+│   └── sample-report.json     # Sanitised example report output
 │
-├──.github/workflows/ci.yml # GitHub Actions: test on Python 3.10/3.11/3.12
-├── Dockerfile # Toolkit container (non-root, Python 3.12)
-├── pyproject.toml # Packaging, dependencies, tool config
-├── push-to-github.sh # One-shot GitHub repo setup script
+├── .github/workflows/ci.yml   # GitHub Actions: test on Python 3.10/3.11/3.12
+├── Dockerfile                 # Toolkit container (non-root, Python 3.12)
+├── pyproject.toml             # Packaging, dependencies, tool config
+├── push-to-github.sh          # One-shot GitHub repo setup script
 └── README.md
 ```
 
@@ -197,11 +195,11 @@ git clone https://github.com/your-org/php2shell-sentinel.git
 cd php2shell-sentinel
 
 # 2. Create an isolated virtual environment
-python3 -m venv.venv
-source.venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 
 # 3. Install the toolkit
-pip install -e.
+pip install -e .
 
 # 4. Verify
 php2shell-sentinel --help
@@ -216,7 +214,7 @@ pip install -e ".[dev]"
 ### Docker install (toolkit container)
 
 ```bash
-docker build -t php2shell-sentinel.
+docker build -t php2shell-sentinel .
 docker run --rm php2shell-sentinel --help
 docker run --rm php2shell-sentinel version-check
 ```
@@ -236,20 +234,20 @@ php2shell-sentinel version-check
 ```
 PHP2Shell Sentinel — Patch Matrix
 
-CVEs tracked: CVE-2026-109618, CVE-2026-109619
-CVSS v4.0: 9.2 (Critical)
-Patch date: 2026-10-21
+CVEs tracked:  CVE-2026-109618, CVE-2026-109619
+CVSS v4.0:     9.2 (Critical)
+Patch date:    2026-10-21
 
 ┌────────────┬─────────────────┬──────────────────────────┐
-│ PHP Branch │ Patched Version │ Status │
+│ PHP Branch │ Patched Version │ Status                   │
 ├────────────┼─────────────────┼──────────────────────────┤
-│ 8.5 │ 8.5.12 │ ✓ Patch available │
-│ 8.4 │ 8.4.27 │ ✓ Patch available │
-│ 8.3 │ 8.3.36 │ ✓ Patch available │
-│ 8.2 │ 8.2.35 │ ✓ Patch available │
-│ 8.1 │ N/A │ ⚠ EOL — no official patch│
-│ 8.0 │ N/A │ ⚠ EOL — no official patch│
-│ 7.x │ N/A │ ⚠ EOL — no official patch│
+│ 8.5        │ 8.5.12          │ ✓ Patch available        │
+│ 8.4        │ 8.4.27          │ ✓ Patch available        │
+│ 8.3        │ 8.3.36          │ ✓ Patch available        │
+│ 8.2        │ 8.2.35          │ ✓ Patch available        │
+│ 8.1        │ N/A             │ ⚠ EOL — no official patch│
+│ 8.0        │ N/A             │ ⚠ EOL — no official patch│
+│ 7.x        │ N/A             │ ⚠ EOL — no official patch│
 └────────────┴─────────────────┴──────────────────────────┘
 ```
 
@@ -257,7 +255,7 @@ Patch date: 2026-10-21
 
 ### 2. `audit-local`
 
-Scan all local PHP installations for vulnerable versions. 
+Scan all local PHP installations for vulnerable versions.  
 Inspects binaries, `php.ini`, and PHP-FPM pool configs — **read-only, never modifies files**.
 
 ```bash
@@ -281,43 +279,39 @@ php2shell-sentinel audit-local --format all --output report.json
 
 ### 3. `assess` — Remote Target
 
-Conservative HTTP header assessment of an authorised remote target. 
+Conservative HTTP header assessment of an authorised remote target.  
 **Only reads response headers — no exploit payloads are sent.**
 
 ```bash
 # Single authorised target
 php2shell-sentinel assess \
- --target https://staging.example.com \
- --allowlist staging.example.com
+  --target https://staging.example.com \
+  --allowlist staging.example.com
 
 # Multiple targets from files
 php2shell-sentinel assess \
- --target-file targets.txt \
- --allowlist-file allowlist.txt \
- --format json \
- --output remote-report.json
+  --target-file targets.txt \
+  --allowlist-file allowlist.txt \
+  --format json \
+  --output remote-report.json
 
 # Adjust timeouts and rate limiting
 php2shell-sentinel assess \
- --target https://staging.example.com \
- --allowlist staging.example.com \
- --timeout 15 \
- --rate-delay 2
+  --target https://staging.example.com \
+  --allowlist staging.example.com \
+  --timeout 15 \
+  --rate-delay 2
 
 # Lab containers (TLS verification disabled — isolated environments only)
 php2shell-sentinel assess \
- --target http://127.0.0.1:8881 \
- --allowlist 127.0.0.1 \
- --no-verify-tls
+  --target http://127.0.0.1:8881 \
+  --allowlist 127.0.0.1 \
+  --no-verify-tls
 ```
 
 > 🔒 Targets **not** in `--allowlist` are skipped automatically.
 
----
-
-### 4. Reverse Shell Execution (PoC)
-
-To leverage a successful assessment for post-exploitation, use the provided shell client.
+#### Reverse Shell Execution (PoC)
 
 **1. Generate the reverse shell command**
 
@@ -341,7 +335,7 @@ python3 php2shell_exploit_tool.py
 
 ---
 
-### 5. `fingerprint` — Deep Fingerprint
+### 4. `fingerprint` — Deep Fingerprint
 
 Passive multi-technique fingerprinting — goes deeper than header-only assessment.
 
@@ -358,33 +352,33 @@ php2shell-sentinel fingerprint https://staging.example.com
 
 # With explicit allowlist
 php2shell-sentinel fingerprint https://staging.example.com \
- --allowlist staging.example.com
+  --allowlist staging.example.com
 
 # Lab (no TLS)
 php2shell-sentinel fingerprint http://127.0.0.1:8881 \
- --allowlist 127.0.0.1 \
- --no-verify-tls
+  --allowlist 127.0.0.1 \
+  --no-verify-tls
 ```
 
 ```
-Target: https://staging.example.com/
-PHP detected: True
-Version hint: 8.4.26
-Confidence: MEDIUM
+Target:          https://staging.example.com/
+PHP detected:    True
+Version hint:    8.4.26
+Confidence:      MEDIUM
 Techniques used: header-correlation, error-page-probe, cookie-probe, response-timing
 
 Evidence:
- • x-powered-by: 'PHP/8.4.26' → PHP 8.4.26
- • PHP error-page patterns found: '<b>Fatal error</b>'
- • PHPSESSID cookie detected in Set-Cookie header
- • Response timing:.php avg=145.2ms static avg=42.1ms diff=+103.1ms
+  • x-powered-by: 'PHP/8.4.26' → PHP 8.4.26
+  • PHP error-page patterns found: '<b>Fatal error</b>'
+  • PHPSESSID cookie detected in Set-Cookie header
+  • Response timing: .php avg=145.2ms  static avg=42.1ms  diff=+103.1ms
 
 PHP presence confirmed — run full assess for vulnerability status.
 ```
 
 ---
 
-### 6. `lab-check`
+### 5. `lab-check`
 
 Verify Docker lab isolation before testing.
 
@@ -401,7 +395,7 @@ docker compose down
 
 ---
 
-### 7. `report` — Re-render Saved Report
+### 6. `report` — Re-render Saved Report
 
 Convert a previously saved JSON report into another format.
 
@@ -419,38 +413,38 @@ Terminal output for a vulnerable local installation:
 ```
 PHP2Shell Sentinel — Assessment Report
 
-Scope: local-audit
+Scope:     local-audit
 Generated: 2026-10-23T09:15:00Z
-Toolkit: v1.0.0
+Toolkit:   v1.0.0
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ CVE │ CVSS v4.0 │ Patched In │
+│ CVE           │ CVSS v4.0 │ Patched In                         │
 ├───────────────┼───────────┼────────────────────────────────────┤
-│ CVE-2026-109618 │ 9.2 │ 8.5: 8.5.12 / 8.4: 8.4.27 /... │
-│ CVE-2026-109619 │ 9.2 │ 8.5: 8.5.12 / 8.4: 8.4.27 /... │
+│ CVE-2026-109618 │ 9.2     │ 8.5: 8.5.12 / 8.4: 8.4.27 / ...  │
+│ CVE-2026-109619 │ 9.2     │ 8.5: 8.5.12 / 8.4: 8.4.27 / ...  │
 └─────────────────────────────────────────────────────────────────┘
 
 ╭─────────────────────────────────────────────────────────────────╮
-│ [1] /usr/bin/php8.4 [VULNERABLE] │
-│ │
-│ Timestamp: 2026-10-23T09:15:02Z │
-│ PHP version: 8.4.26 │
-│ Status: VULNERABLE │
-│ Confidence: HIGH │
-│ Checks: php-binary-version, php-ini:/etc/php/8.4/cli/php.ini │
-│ │
-│ Evidence: │
-│ • PHP 8.4.26 < patched release 8.4.27 on branch 8.4 │
-│ │
-│ Notes: │
-│ ⚠ memory_limit=128M → OOM path exploited by CVE-2026-109618 │
-│ ⚠ session.upload_progress.enabled=1 → attack vector │
-│ │
-│ Recommendations: │
-│ → Upgrade to PHP 8.4.27 immediately (released 2026-10-21) │
-│ → Set memory_limit=-1 in php.ini │
-│ → Set session.upload_progress.enabled=0 in php.ini │
-│ → Set fatal_error_backtraces=0 in php.ini │
+│ [1] /usr/bin/php8.4  [VULNERABLE]                              │
+│                                                                 │
+│ Timestamp:   2026-10-23T09:15:02Z                               │
+│ PHP version: 8.4.26                                             │
+│ Status:      VULNERABLE                                         │
+│ Confidence:  HIGH                                               │
+│ Checks:      php-binary-version, php-ini:/etc/php/8.4/cli/php.ini │
+│                                                                 │
+│ Evidence:                                                       │
+│  • PHP 8.4.26 < patched release 8.4.27 on branch 8.4          │
+│                                                                 │
+│ Notes:                                                          │
+│  ⚠  memory_limit=128M → OOM path exploited by CVE-2026-109618 │
+│  ⚠  session.upload_progress.enabled=1 → attack vector         │
+│                                                                 │
+│ Recommendations:                                                │
+│  → Upgrade to PHP 8.4.27 immediately (released 2026-10-21)    │
+│  → Set memory_limit=-1 in php.ini                              │
+│  → Set session.upload_progress.enabled=0 in php.ini           │
+│  → Set fatal_error_backtraces=0 in php.ini                     │
 ╰─────────────────────────────────────────────────────────────────╯
 ```
 
@@ -466,7 +460,7 @@ The isolated lab runs two PHP containers for detection comparison:
 | `php2shell-vulnerable` | `127.0.0.1:8881` | 8.4.26 | Vulnerable comparison |
 | `php2shell-fpm-patched` | internal only | 8.4.27 | FPM variant |
 
-**All ports are bound to `127.0.0.1` only.** 
+**All ports are bound to `127.0.0.1` only.**  
 An internal-only Docker network (`lab_internal`) is used — containers have no external internet access.
 
 ```bash
@@ -475,9 +469,9 @@ cd lab && docker compose up -d
 
 # Run assessment against lab
 php2shell-sentinel assess \
- --target http://127.0.0.1:8881 \
- --allowlist 127.0.0.1 \
- --no-verify-tls
+  --target http://127.0.0.1:8881 \
+  --allowlist 127.0.0.1 \
+  --no-verify-tls
 
 # Run integration tests with lab running
 PHP2SHELL_LAB=1 pytest tests/test_integration_lab.py -v
@@ -490,7 +484,7 @@ docker compose down
 
 ## Temporary Mitigations
 
-If you cannot immediately upgrade, apply these `php.ini` settings. 
+If you cannot immediately upgrade, apply these `php.ini` settings.  
 **These are partial mitigations only — upgrading is the only complete fix.**
 
 ```ini
@@ -623,7 +617,7 @@ Contributions are welcome for:
 ```bash
 git clone https://github.com/your-org/php2shell-sentinel.git
 cd php2shell-sentinel
-python3 -m venv.venv && source.venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
 # Run linter
@@ -651,4 +645,3 @@ MIT © PHP2Shell Sentinel Contributors — see [LICENSE](LICENSE)
 [Report a Bug](https://github.com/your-org/php2shell-sentinel/issues) · [Request a Feature](https://github.com/your-org/php2shell-sentinel/issues) · [Security Policy](https://github.com/your-org/php2shell-sentinel/security)
 
 </div>
-```
